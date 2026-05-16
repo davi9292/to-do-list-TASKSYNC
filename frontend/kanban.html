@@ -1,0 +1,284 @@
+<!-- Davi de Assis Fabricio -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskSync — Kanban</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="../index.html">
+    <div class="logo-mark">TS</div>
+    <div><div class="brand-name">TaskSync</div><div class="brand-tag">Solutions</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="../index.html">Dashboard</a>
+    <a href="usuarios.html">Usuários</a>
+    <a href="tarefas.html">Tarefas</a>
+    <a href="kanban.html" class="active">Kanban</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>Gerenciamento de Tarefas</h1>
+      <p>Visualize e mova as tarefas entre os status</p>
+    </div>
+    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+      <select id="filtro-usuario" onchange="aplicarFiltro()" style="font-size:.85rem;padding:.4rem .75rem">
+        <option value="">Todos os usuários</option>
+      </select>
+      <select id="filtro-prio" onchange="aplicarFiltro()" style="font-size:.85rem;padding:.4rem .75rem">
+        <option value="">Todas as prioridades</option>
+        <option value="alta">Alta</option>
+        <option value="media">Média</option>
+        <option value="baixa">Baixa</option>
+      </select>
+      <a href="tarefas.html" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova Tarefa
+      </a>
+    </div>
+  </div>
+
+  <div class="kanban">
+    <!-- A Fazer -->
+    <div class="kanban-col">
+      <div class="kanban-header">
+        <div class="kanban-title">
+          <span class="kanban-dot dot-todo"></span>
+          A Fazer
+        </div>
+        <span class="kanban-count" id="cnt-todo">0</span>
+      </div>
+      <div class="kanban-body" id="col-todo"></div>
+    </div>
+
+    <!-- Fazendo -->
+    <div class="kanban-col">
+      <div class="kanban-header">
+        <div class="kanban-title">
+          <span class="kanban-dot dot-doing"></span>
+          Fazendo
+        </div>
+        <span class="kanban-count" id="cnt-doing">0</span>
+      </div>
+      <div class="kanban-body" id="col-doing"></div>
+    </div>
+
+    <!-- Concluído -->
+    <div class="kanban-col">
+      <div class="kanban-header">
+        <div class="kanban-title">
+          <span class="kanban-dot dot-done"></span>
+          Concluído
+        </div>
+        <span class="kanban-count" id="cnt-done">0</span>
+      </div>
+      <div class="kanban-body" id="col-done"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar tarefa -->
+<div class="modal-backdrop" id="modal-edit" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Editar Tarefa</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label for="e-usuario_id">Responsável</label>
+        <select id="e-usuario_id"></select>
+      </div>
+      <div>
+        <label for="e-descricao">Descrição</label>
+        <textarea id="e-descricao"></textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="e-setor">Setor</label>
+          <input type="text" id="e-setor" />
+        </div>
+        <div>
+          <label for="e-prioridade">Prioridade</label>
+          <select id="e-prioridade">
+            <option value="baixa">🟢 Baixa</option>
+            <option value="media">🟡 Média</option>
+            <option value="alta">🔴 Alta</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarEdit()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal excluir -->
+<div class="modal-backdrop" id="modal-delete" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Confirmar exclusão</h2>
+      <button class="modal-close" onclick="closeDelete()">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem">Esta ação é irreversível. Confirma a exclusão da tarefa?</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDelete()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script>
+let tarefas  = [];
+let usuarios = [];
+let editId   = null;
+let deleteId = null;
+
+async function init() {
+  const [tr, ur] = await Promise.all([apiFetch(API.tarefas), apiFetch(API.usuarios)]);
+  tarefas  = tr.data  || [];
+  usuarios = ur.data  || [];
+
+  // Preencher filtro de usuário
+  const sel = document.getElementById('filtro-usuario');
+  sel.innerHTML = `<option value="">Todos os usuários</option>` +
+    usuarios.map(u => `<option value="${u.id}">${u.nome}</option>`).join('');
+
+  // Preencher select de edição
+  document.getElementById('e-usuario_id').innerHTML =
+    usuarios.map(u => `<option value="${u.id}">${u.nome} — ${u.setor}</option>`).join('');
+
+  renderKanban(tarefas);
+}
+
+function aplicarFiltro() {
+  const uid  = document.getElementById('filtro-usuario').value;
+  const prio = document.getElementById('filtro-prio').value;
+  let lista  = tarefas;
+  if (uid)  lista = lista.filter(t => t.usuario_id == uid);
+  if (prio) lista = lista.filter(t => t.prioridade === prio);
+  renderKanban(lista);
+}
+
+function renderKanban(lista) {
+  const groups = { a_fazer: [], fazendo: [], concluido: [] };
+  lista.forEach(t => (groups[t.status] ??= []).push(t));
+
+  renderCol('col-todo',  'cnt-todo',  groups.a_fazer);
+  renderCol('col-doing', 'cnt-doing', groups.fazendo);
+  renderCol('col-done',  'cnt-done',  groups.concluido);
+}
+
+function renderCol(colId, cntId, items) {
+  document.getElementById(cntId).textContent = items.length;
+  const col = document.getElementById(colId);
+  if (!items.length) {
+    col.innerHTML = `
+      <div class="empty-state">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
+        <p>Nenhuma tarefa aqui</p>
+      </div>`;
+    return;
+  }
+  col.innerHTML = items.map(t => `
+    <div class="task-card ${t.prioridade}">
+      <div class="task-top">
+        <div class="task-desc">${t.descricao}</div>
+        <span class="badge badge-${t.prioridade}">${prioLabel(t.prioridade)}</span>
+      </div>
+      <div class="task-meta">
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          ${t.usuario_nome}
+        </span>
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          ${t.setor}
+        </span>
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${formatDate(t.criado_em)}
+        </span>
+        <span style="color:var(--muted);font-size:.68rem">#${t.id}</span>
+      </div>
+      <div class="task-actions">
+        <select class="status-select" onchange="alterarStatus(${t.id}, this.value)">
+          <option value="a_fazer"   ${t.status==='a_fazer'   ?'selected':''}>A Fazer</option>
+          <option value="fazendo"   ${t.status==='fazendo'   ?'selected':''}>Fazendo</option>
+          <option value="concluido" ${t.status==='concluido' ?'selected':''}>Concluído</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="editarTarefa(${t.id})" title="Editar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="confirmarExclusao(${t.id})" title="Excluir">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function alterarStatus(id, status) {
+  const r = await apiFetch(API.tarefas + '?id=' + id, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  });
+  if (r.success) {
+    const t = tarefas.find(x => x.id == id);
+    if (t) t.status = status;
+    aplicarFiltro();
+    toast('Status atualizado!');
+  } else toast(r.message || 'Erro ao atualizar.', 'error');
+}
+
+function editarTarefa(id) {
+  const t = tarefas.find(x => x.id == id);
+  if (!t) return;
+  editId = id;
+  document.getElementById('e-usuario_id').value = t.usuario_id;
+  document.getElementById('e-descricao').value   = t.descricao;
+  document.getElementById('e-setor').value        = t.setor;
+  document.getElementById('e-prioridade').value   = t.prioridade;
+  document.getElementById('modal-edit').style.display = 'flex';
+}
+
+async function confirmarEdit() {
+  const body = {
+    usuario_id: document.getElementById('e-usuario_id').value,
+    descricao:  document.getElementById('e-descricao').value.trim(),
+    setor:      document.getElementById('e-setor').value.trim(),
+    prioridade: document.getElementById('e-prioridade').value,
+  };
+  if (!body.descricao || !body.setor) { toast('Preencha todos os campos.','error'); return; }
+  const r = await apiFetch(API.tarefas + '?id=' + editId, { method: 'PUT', body: JSON.stringify(body) });
+  closeModal();
+  if (r.success) { toast('Tarefa atualizada!'); await init(); aplicarFiltro(); }
+  else toast(r.message || 'Erro.', 'error');
+}
+
+function confirmarExclusao(id) { deleteId = id; document.getElementById('modal-delete').style.display = 'flex'; }
+
+async function confirmarDelete() {
+  const r = await apiFetch(API.tarefas + '?id=' + deleteId, { method: 'DELETE' });
+  closeDelete();
+  if (r.success) { toast('Tarefa excluída.'); tarefas = tarefas.filter(t => t.id != deleteId); aplicarFiltro(); }
+  else toast(r.message || 'Erro.', 'error');
+}
+
+function closeModal()  { document.getElementById('modal-edit').style.display   = 'none'; editId   = null; }
+function closeDelete() { document.getElementById('modal-delete').style.display = 'none'; deleteId = null; }
+
+init();
+</script>
+</body>
+</html>

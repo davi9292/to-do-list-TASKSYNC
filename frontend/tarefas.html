@@ -1,0 +1,288 @@
+<!-- Davi de Assis Fabricio -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskSync — Tarefas</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="../index.html">
+    <div class="logo-mark">TS</div>
+    <div><div class="brand-name">TaskSync</div><div class="brand-tag">Solutions</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="../index.html">Dashboard</a>
+    <a href="usuarios.html">Usuários</a>
+    <a href="tarefas.html" class="active">Tarefas</a>
+    <a href="kanban.html">Kanban</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Tarefas</h1>
+    <p>Cadastre e acompanhe as tarefas da equipe</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:1.5rem;align-items:start">
+
+    <!-- Formulário -->
+    <div class="card" id="form-card">
+      <div style="margin-bottom:1.25rem">
+        <h2 style="font-family:var(--font-head);font-weight:700;font-size:1.05rem" id="form-title">Nova Tarefa</h2>
+        <p style="font-size:.8rem;color:var(--muted);margin-top:.2rem">Todos os campos são obrigatórios</p>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label for="usuario_id">Responsável</label>
+          <select id="usuario_id" required>
+            <option value="">Selecione um usuário…</option>
+          </select>
+        </div>
+        <div>
+          <label for="descricao">Descrição da tarefa</label>
+          <textarea id="descricao" placeholder="Descreva a tarefa em detalhes…" required></textarea>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="setor">Setor</label>
+            <input type="text" id="setor" placeholder="Ex: Tecnologia" required />
+          </div>
+          <div>
+            <label for="prioridade">Prioridade</label>
+            <select id="prioridade" required>
+              <option value="">Selecione…</option>
+              <option value="baixa">🟢 Baixa</option>
+              <option value="media">🟡 Média</option>
+              <option value="alta">🔴 Alta</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem">
+          <button class="btn btn-primary btn-full" id="btn-salvar" onclick="salvarTarefa()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Salvar Tarefa
+          </button>
+          <button class="btn btn-ghost" onclick="resetForm()" title="Limpar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de tarefas -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem">
+        <h2 style="font-family:var(--font-head);font-weight:700;font-size:1.05rem">Lista de Tarefas</h2>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <select id="filtro-status" onchange="aplicarFiltro()" style="font-size:.8rem;padding:.3rem .6rem">
+            <option value="">Todos os status</option>
+            <option value="a_fazer">A Fazer</option>
+            <option value="fazendo">Fazendo</option>
+            <option value="concluido">Concluído</option>
+          </select>
+          <span id="task-count" style="font-size:.8rem;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Descrição</th>
+              <th>Responsável</th>
+              <th>Setor</th>
+              <th>Prioridade</th>
+              <th>Status</th>
+              <th>Data</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-tbody">
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal editar tarefa -->
+<div class="modal-backdrop" id="modal-edit" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Editar Tarefa</h2>
+      <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label for="e-usuario_id">Responsável</label>
+        <select id="e-usuario_id"></select>
+      </div>
+      <div>
+        <label for="e-descricao">Descrição</label>
+        <textarea id="e-descricao"></textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="e-setor">Setor</label>
+          <input type="text" id="e-setor" />
+        </div>
+        <div>
+          <label for="e-prioridade">Prioridade</label>
+          <select id="e-prioridade">
+            <option value="baixa">🟢 Baixa</option>
+            <option value="media">🟡 Média</option>
+            <option value="alta">🔴 Alta</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarEdit()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal excluir -->
+<div class="modal-backdrop" id="modal-delete" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Confirmar exclusão</h2>
+      <button class="modal-close" onclick="closeModal('modal-delete')">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem">Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script>
+let tarefas   = [];
+let usuarios  = [];
+let editId    = null;
+let deleteId  = null;
+
+async function init() {
+  const [tr, ur] = await Promise.all([apiFetch(API.tarefas), apiFetch(API.usuarios)]);
+  tarefas  = tr.data  || [];
+  usuarios = ur.data  || [];
+  popularSelect('usuario_id', usuarios);
+  popularSelect('e-usuario_id', usuarios);
+  renderTable(tarefas);
+}
+
+function popularSelect(id, lista) {
+  const el = document.getElementById(id);
+  el.innerHTML = id.startsWith('e-')
+    ? lista.map(u => `<option value="${u.id}">${u.nome} — ${u.setor}</option>`).join('')
+    : `<option value="">Selecione um usuário…</option>` + lista.map(u => `<option value="${u.id}">${u.nome} — ${u.setor}</option>`).join('');
+}
+
+function aplicarFiltro() {
+  const f = document.getElementById('filtro-status').value;
+  renderTable(f ? tarefas.filter(t => t.status === f) : tarefas);
+}
+
+function renderTable(lista) {
+  const tbody = document.getElementById('tasks-tbody');
+  document.getElementById('task-count').textContent = `${lista.length} tarefa(s)`;
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">Nenhuma tarefa encontrada</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = lista.map(t => `
+    <tr>
+      <td style="color:var(--muted);font-size:.78rem">#${t.id}</td>
+      <td style="max-width:200px;font-size:.875rem">${t.descricao}</td>
+      <td style="font-size:.84rem">${t.usuario_nome}</td>
+      <td style="font-size:.84rem">${t.setor}</td>
+      <td><span class="badge badge-${t.prioridade}">${prioLabel(t.prioridade)}</span></td>
+      <td style="font-size:.84rem">${statusLabel(t.status)}</td>
+      <td style="font-size:.78rem;color:var(--muted)">${formatDate(t.criado_em)}</td>
+      <td>
+        <div style="display:flex;gap:.3rem">
+          <button class="btn btn-ghost btn-sm" onclick="editarTarefa(${t.id})" title="Editar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="deletarTarefa(${t.id})" title="Excluir">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function salvarTarefa() {
+  const usuario_id = document.getElementById('usuario_id').value;
+  const descricao  = document.getElementById('descricao').value.trim();
+  const setor      = document.getElementById('setor').value.trim();
+  const prioridade = document.getElementById('prioridade').value;
+  if (!usuario_id || !descricao || !setor || !prioridade) {
+    toast('Preencha todos os campos.', 'error'); return;
+  }
+  const r = await apiFetch(API.tarefas, { method: 'POST', body: JSON.stringify({ usuario_id, descricao, setor, prioridade }) });
+  if (r.success) { toast('Tarefa cadastrada!'); resetForm(); await init(); }
+  else toast(r.message || 'Erro ao salvar.', 'error');
+}
+
+function editarTarefa(id) {
+  const t = tarefas.find(x => x.id == id);
+  if (!t) return;
+  editId = id;
+  document.getElementById('e-usuario_id').value = t.usuario_id;
+  document.getElementById('e-descricao').value   = t.descricao;
+  document.getElementById('e-setor').value        = t.setor;
+  document.getElementById('e-prioridade').value   = t.prioridade;
+  document.getElementById('modal-edit').style.display = 'flex';
+}
+
+async function confirmarEdit() {
+  const body = {
+    usuario_id: document.getElementById('e-usuario_id').value,
+    descricao:  document.getElementById('e-descricao').value.trim(),
+    setor:      document.getElementById('e-setor').value.trim(),
+    prioridade: document.getElementById('e-prioridade').value,
+  };
+  if (!body.usuario_id || !body.descricao || !body.setor || !body.prioridade) {
+    toast('Preencha todos os campos.', 'error'); return;
+  }
+  const r = await apiFetch(API.tarefas + '?id=' + editId, { method: 'PUT', body: JSON.stringify(body) });
+  closeModal('modal-edit');
+  if (r.success) { toast('Tarefa atualizada!'); await init(); }
+  else toast(r.message || 'Erro ao atualizar.', 'error');
+}
+
+function deletarTarefa(id) { deleteId = id; document.getElementById('modal-delete').style.display = 'flex'; }
+
+async function confirmarDelete() {
+  const r = await apiFetch(API.tarefas + '?id=' + deleteId, { method: 'DELETE' });
+  closeModal('modal-delete');
+  if (r.success) { toast('Tarefa excluída.'); await init(); }
+  else toast(r.message || 'Erro ao excluir.', 'error');
+}
+
+function closeModal(id) { document.getElementById(id).style.display = 'none'; editId = null; deleteId = null; }
+
+function resetForm() {
+  document.getElementById('usuario_id').value = '';
+  document.getElementById('descricao').value  = '';
+  document.getElementById('setor').value      = '';
+  document.getElementById('prioridade').value = '';
+}
+
+init();
+</script>
+</body>
+</html>

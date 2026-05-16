@@ -1,0 +1,134 @@
+<!-- Davi de Assis Fabricio -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskSync — Dashboard</title>
+  <link rel="stylesheet" href="frontend/css/style.css" />
+  <style>
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 3rem;
+    }
+    .hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--accent) 30%, var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      color: var(--muted);
+      max-width: 520px;
+      margin: 1rem auto 2.5rem;
+      font-size: 1.05rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .quick-links  {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      max-width: 900px;
+      margin: 0 auto 3rem;
+    }
+    .quick-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color .2s, transform .2s;
+      display: flex; flex-direction: column; gap: .5rem;
+    }
+    .quick-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .quick-card .icon { font-size: 1.6rem; }
+    .quick-card h3 { font-family: var(--font-head); font-weight: 700; font-size: 1rem; }
+    .quick-card p  { font-size: .83rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <a class="navbar-brand" href="index.html">
+    <div class="logo-mark">TS</div>
+    <div>
+      <div class="brand-name">TaskSync</div>
+      <div class="brand-tag">Solutions</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html"><span>Dashboard</span></a>
+    <a href="frontend/usuarios.html"><span>Usuários</span></a>
+    <a href="frontend/tarefas.html"><span>Tarefas</span></a>
+    <a href="frontend/kanban.html"><span>Kanban</span></a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="page">
+  <div class="hero">
+    <h1>Gerencie projetos<br/>com clareza</h1>
+    <p>TaskSync é a plataforma de gestão de tarefas da TaskSync Solutions — visual, simples e eficiente.</p>
+    <div class="hero-actions">
+      <a href="frontend/kanban.html" class="btn btn-primary">Ver Kanban</a>
+      <a href="frontend/tarefas.html" class="btn btn-ghost">Cadastrar Tarefa</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total de Tarefas</div><div class="stat-value purple" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">A Fazer</div><div class="stat-value blue" id="stat-todo">—</div></div>
+    <div class="stat-card"><div class="stat-label">Em Andamento</div><div class="stat-value orange" id="stat-doing">—</div></div>
+    <div class="stat-card"><div class="stat-label">Concluídas</div><div class="stat-value green" id="stat-done">—</div></div>
+    <div class="stat-card"><div class="stat-label">Usuários</div><div class="stat-value blue" id="stat-users">—</div></div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="quick-links">
+    <a href="frontend/usuarios.html" class="quick-card">
+      <div class="icon">👤</div>
+      <h3>Cadastro de Usuários</h3>
+      <p>Adicione e gerencie os colaboradores da equipe.</p>
+    </a>
+    <a href="frontend/tarefas.html" class="quick-card">
+      <div class="icon">📝</div>
+      <h3>Cadastro de Tarefas</h3>
+      <p>Crie e edite tarefas vinculadas a usuários e setores.</p>
+    </a>
+    <a href="frontend/kanban.html" class="quick-card">
+      <div class="icon">🗂️</div>
+      <h3>Gerenciamento Kanban</h3>
+      <p>Visualize todas as tarefas organizadas por status.</p>
+    </a>
+  </div>
+</div>
+
+<script src="frontend/js/utils.js"></script>
+<script>
+// index.html fica na raiz — corrige os caminhos relativos
+API.usuarios = 'backend/api/usuarios.php';
+API.tarefas  = 'backend/api/tarefas.php';
+
+(async () => {
+  const [tr, ur] = await Promise.all([
+    apiFetch(API.tarefas),
+    apiFetch(API.usuarios),
+  ]);
+  const tarefas = tr.data || [];
+  const usuarios = ur.data || [];
+  document.getElementById('stat-total').textContent = tarefas.length;
+  document.getElementById('stat-todo').textContent  = tarefas.filter(t => t.status === 'a_fazer').length;
+  document.getElementById('stat-doing').textContent = tarefas.filter(t => t.status === 'fazendo').length;
+  document.getElementById('stat-done').textContent  = tarefas.filter(t => t.status === 'concluido').length;
+  document.getElementById('stat-users').textContent = usuarios.length;
+})();
+</script>
+</body>
+</html>
