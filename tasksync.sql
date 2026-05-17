@@ -1,126 +1,143 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Tempo de geração: 18/05/2026 às 00:41
--- Versão do servidor: 10.4.32-MariaDB
--- Versão do PHP: 8.2.12
+-- =========================================
+-- BANCO DE DADOS TASKSYNC - correto
+-- =========================================
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+CREATE DATABASE IF NOT EXISTS `tasksync`
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
 
+USE `tasksync`;
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Banco de dados: `tasksync`
---
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `tarefas`
---
-
-CREATE TABLE `tarefas` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `usuario_id` int(10) UNSIGNED NOT NULL,
-  `descricao` text NOT NULL,
-  `setor` varchar(80) NOT NULL,
-  `prioridade` enum('baixa','media','alta') NOT NULL DEFAULT 'baixa',
-  `status` enum('a_fazer','fazendo','concluido') NOT NULL DEFAULT 'a_fazer',
-  `criado_em` datetime NOT NULL DEFAULT current_timestamp(),
-  `atualizado_em` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `tarefas`
---
-
-INSERT INTO `tarefas` (`id`, `usuario_id`, `descricao`, `setor`, `prioridade`, `status`, `criado_em`, `atualizado_em`) VALUES
-(1, 1, 'Configurar servidor de produção', 'Tecnologia', 'alta', 'concluido', '2026-05-16 00:11:37', '2026-05-16 00:38:48'),
-(2, 1, 'Revisar documentação do sistema', 'Tecnologia', 'media', 'a_fazer', '2026-05-16 00:11:37', '2026-05-16 00:11:37'),
-(3, 2, 'Criar campanha de e-mail marketing', 'Marketing', 'alta', 'a_fazer', '2026-05-16 00:11:37', '2026-05-16 00:11:37'),
-(4, 2, 'Analisar métricas de redes sociais', 'Marketing', 'baixa', 'fazendo', '2026-05-16 00:11:37', '2026-05-16 00:38:53'),
-(5, 3, 'Fechamento financeiro do mês', 'Financeiro', 'alta', 'fazendo', '2026-05-16 00:11:37', '2026-05-16 00:11:37'),
-(6, 3, 'Gerar relatório de despesas trimestrais', 'Financeiro', 'media', 'a_fazer', '2026-05-16 00:11:37', '2026-05-16 00:11:37'),
-(7, 7, 'Criar campanha de ratos', 'Marketing', 'baixa', 'a_fazer', '2026-05-16 00:40:03', '2026-05-16 00:40:03');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `usuarios`
---
+-- =========================================
+-- TABELA USUARIOS
+-- =========================================
 
 CREATE TABLE `usuarios` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `nome` varchar(100) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  `setor` varchar(80) NOT NULL,
-  `cargo` varchar(80) NOT NULL,
-  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(150) NOT NULL,
+  `setor` VARCHAR(80) NOT NULL,
+  `cargo` VARCHAR(80) NOT NULL,
+  `criado_em` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
---
--- Despejando dados para a tabela `usuarios`
---
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_email` (`email`)
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `usuarios` (`id`, `nome`, `email`, `setor`, `cargo`, `criado_em`) VALUES
-(1, 'Admin TaskSync', 'admin@tasksync.com', 'Tecnologia', 'Administrador', '2026-05-16 00:11:37'),
-(2, 'Ana Lima', 'ana@tasksync.com', 'Marketing', 'Analista', '2026-05-16 00:11:37'),
-(3, 'Bruno Costa', 'bruno@tasksync.com', 'Financeiro', 'Coordenador', '2026-05-16 00:11:37'),
-(7, 'deivi mouse', 'davi@gmail.com', 'Financeiro', 'Analista', '2026-05-16 00:38:26');
+-- =========================================
+-- TABELA TAREFAS
+-- =========================================
 
---
--- Índices para tabelas despejadas
---
+CREATE TABLE `tarefas` (
+  `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usuario_id` INT(10) UNSIGNED NOT NULL,
+  `descricao` TEXT NOT NULL,
+  `setor` VARCHAR(80) NOT NULL,
 
---
--- Índices de tabela `tarefas`
---
-ALTER TABLE `tarefas`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_tarefa_usuario` (`usuario_id`);
+  `prioridade` ENUM('baixa','media','alta')
+  NOT NULL DEFAULT 'baixa',
 
---
--- Índices de tabela `usuarios`
---
-ALTER TABLE `usuarios`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+  `status` ENUM('a_fazer','fazendo','concluido')
+  NOT NULL DEFAULT 'a_fazer',
 
---
--- AUTO_INCREMENT para tabelas despejadas
---
+  `criado_em` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
---
--- AUTO_INCREMENT de tabela `tarefas`
---
-ALTER TABLE `tarefas`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  `atualizado_em` DATETIME NOT NULL
+  DEFAULT CURRENT_TIMESTAMP
+  ON UPDATE CURRENT_TIMESTAMP,
 
---
--- AUTO_INCREMENT de tabela `usuarios`
---
-ALTER TABLE `usuarios`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  PRIMARY KEY (`id`),
 
---
--- Restrições para tabelas despejadas
---
+  KEY `fk_tarefa_usuario` (`usuario_id`),
 
---
--- Restrições para tabelas `tarefas`
---
-ALTER TABLE `tarefas`
-  ADD CONSTRAINT `fk_tarefa_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-COMMIT;
+  CONSTRAINT `fk_tarefa_usuario`
+  FOREIGN KEY (`usuario_id`)
+  REFERENCES `usuarios` (`id`)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================
+-- INSERTS USUARIOS
+-- =========================================
+
+INSERT INTO `usuarios`
+(`nome`, `email`, `setor`, `cargo`)
+VALUES
+('Admin TaskSync', 'admin@tasksync.com', 'Tecnologia', 'Administrador'),
+
+('Ana Lima', 'ana@tasksync.com', 'Marketing', 'Analista'),
+
+('Bruno Costa', 'bruno@tasksync.com', 'Financeiro', 'Coordenador'),
+
+('Davi Mouse', 'davi@gmail.com', 'Financeiro', 'Analista');
+
+-- =========================================
+-- INSERTS TAREFAS
+-- =========================================
+
+INSERT INTO `tarefas`
+(`usuario_id`, `descricao`, `setor`, `prioridade`, `status`)
+VALUES
+
+(1,
+'Configurar servidor de produção',
+'Tecnologia',
+'alta',
+'concluido'),
+
+(1,
+'Revisar documentação do sistema',
+'Tecnologia',
+'media',
+'a_fazer'),
+
+(2,
+'Criar campanha de e-mail marketing',
+'Marketing',
+'alta',
+'a_fazer'),
+
+(2,
+'Analisar métricas de redes sociais',
+'Marketing',
+'baixa',
+'fazendo'),
+
+(3,
+'Fechamento financeiro do mês',
+'Financeiro',
+'alta',
+'fazendo'),
+
+(3,
+'Gerar relatório de despesas trimestrais',
+'Financeiro',
+'media',
+'a_fazer'),
+
+(4,
+'Criar campanha de ratos',
+'Marketing',
+'baixa',
+'a_fazer');
+
+-- =========================================
+-- CONSULTA TESTE
+-- =========================================
+
+SELECT
+    t.id,
+    t.descricao,
+    t.setor,
+    t.prioridade,
+    t.status,
+    u.nome AS usuario
+FROM tarefas t
+INNER JOIN usuarios u
+ON t.usuario_id = u.id;
