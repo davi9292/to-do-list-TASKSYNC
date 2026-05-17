@@ -28,9 +28,9 @@
    - Inicie o XAMPP (Apache + MySQL)
    - Acesse `http://localhost/phpmyadmin`
    - Crie o banco ou deixe o script criar automaticamente
-   - Vá em **Importar** e selecione o arquivo:
+   - Copie e cole ou vá em **Importar** e selecione o arquivo:
      ```
-     backend/tasksync.sql
+     tasksync.sql
      ```
 
 3. **Configure a conexão** (se necessário):  
@@ -63,12 +63,12 @@ tasksync/
 │   └── js/
 │       └── utils.js
 ├── backend/
-│   ├── tasksync.sql            ← Script do banco de dados
 │   ├── config/
 │   │   └── db.php              ← Configuração PDO
 │   └── api/
 │       ├── usuarios.php        ← API REST usuários
 │       └── tarefas.php         ← API REST tarefas
+├── tasksync.sql            ← Script do banco de dados
 └── docs/
     ├── DER_TaskSync.svg        ← Diagrama Entidade-Relacionamento
     └── CasoDeUso_TaskSync.svg  ← Diagrama de Caso de Uso
